@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Concepts Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF7F0;
+    --paper-dim:#F0EBDF;
+    --ink:#1F2A44;
+    --ink-soft:#5B6478;
+    --rule:#D9D2C0;
+    --teal:#2F6F62;
+    --teal-dim:#E4EFEC;
+    --amber:#C97A2B;
+    --amber-dim:#FBEEDD;
+    --red:#B0432E;
+    --red-dim:#FBE7E2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Inter',sans-serif; line-height:1.5;
+    -webkit-user-select:none; user-select:none;
+  }
+  h1,h2,h3{font-family:'Source Serif 4',serif; margin:0; color:var(--ink);}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:760px; margin:0 auto; padding:32px 20px 100px;}
+
+  /* Top ledger bar */
+  .ledger-bar{
+    position:sticky; top:0; z-index:20; background:var(--paper);
+    border-bottom:2px solid var(--ink); padding:14px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .ledger-bar .brand{font-family:'Source Serif 4',serif; font-weight:700; font-size:1.05rem; letter-spacing:.01em;}
+  .ledger-bar .status{display:flex; gap:18px; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:.8rem; color:var(--ink-soft);}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--teal); display:inline-block; margin-right:6px;}
+  .dot.warn{background:var(--amber);}
+  .dot.bad{background:var(--red);}
+
+  /* Info / instructions screens */
+  .card{
+    background:#fff; border:1px solid var(--rule); border-radius:2px;
+    padding:36px; margin-top:28px;
+  }
+  .field{margin-bottom:20px;}
+  .field label{display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); margin-bottom:6px; font-weight:600;}
+  .field input{
+    width:100%; padding:11px 12px; border:1.5px solid var(--rule); border-radius:2px;
+    font-family:'IBM Plex Mono',monospace; font-size:.95rem; background:var(--paper);
+    color:var(--ink);
+  }
+  .field input:focus{outline:none; border-color:var(--ink);}
+  .btn{
+    appearance:none; border:none; cursor:pointer; font-family:'Inter',sans-serif;
+    font-weight:600; font-size:.92rem; padding:13px 26px; border-radius:2px;
+    background:var(--ink); color:var(--paper); letter-spacing:.01em;
+  }
+  .btn:hover{background:#111a30;}
+  .btn:disabled{background:var(--rule); color:var(--ink-soft); cursor:not-allowed;}
+  .btn.outline{background:transparent; color:var(--ink); border:1.5px solid var(--ink);}
+
+  .rule-list{margin:18px 0 0; padding-left:20px; color:var(--ink-soft); font-size:.92rem;}
+  .rule-list li{margin-bottom:10px;}
+  .rule-list b{color:var(--ink);}
+
+  /* Section index numbers, exam-booklet style */
+  .section-eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:.78rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--teal); margin:44px 0 6px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-eyebrow::after{content:""; flex:1; height:1px; background:var(--rule);}
+
+  /* Question blocks */
+  .q{
+    background:#fff; border:1px solid var(--rule); border-radius:2px;
+    padding:22px 24px; margin-bottom:14px;
+  }
+  .q .qnum{font-family:'IBM Plex Mono',monospace; font-size:.78rem; color:var(--ink-soft); margin-bottom:6px;}
+  .q .prompt{font-size:1rem; margin-bottom:14px; font-weight:500;}
+  .opts{display:flex; flex-direction:column; gap:8px;}
+  .opt{
+    display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
+    border:1.5px solid var(--rule); border-radius:2px; cursor:pointer; font-size:.92rem;
+  }
+  .opt:hover{border-color:var(--ink-soft);}
+  .opt.selected{border-color:var(--teal); background:var(--teal-dim);}
+  .opt input{margin-top:3px;}
+  .coding-answer{display:flex; align-items:center; gap:10px;}
+  .coding-answer input{
+    width:180px; padding:10px 12px; border:1.5px solid var(--rule); border-radius:2px;
+    font-family:'IBM Plex Mono',monospace; font-size:.95rem;
+  }
+  .coding-answer input:focus{outline:none; border-color:var(--ink);}
+  .coding-answer .hint{font-size:.78rem; color:var(--ink-soft);}
+
+  /* Lock / warning overlay */
+  .overlay{
+    position:fixed; inset:0; background:rgba(31,42,68,.92); z-index:50;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .overlay.show{display:flex;}
+  .overlay .box{
+    background:var(--paper); border-radius:2px; padding:32px; max-width:420px; text-align:center;
+  }
+  .overlay .box h2{margin-bottom:12px;}
+  .overlay .box p{color:var(--ink-soft); font-size:.92rem; margin-bottom:20px;}
+
+  .submit-bar{
+    position:sticky; bottom:0; background:var(--paper); border-top:2px solid var(--ink);
+    padding:16px 20px; margin-top:20px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .progress-text{font-family:'IBM Plex Mono',monospace; font-size:.8rem; color:var(--ink-soft);}
+
+  .done-card{text-align:center; padding:60px 30px;}
+  .done-card .score{font-family:'Source Serif 4',serif; font-size:3rem; font-weight:700; margin:14px 0;}
+
+  .error-text{color:var(--red); font-size:.85rem; margin-top:10px;}
+  .hidden{display:none !important;}
+  footer.note{font-size:.78rem; color:var(--ink-soft); text-align:center; margin-top:30px;}
+</style>
+</head>
+<body>
+
+<div class="ledger-bar">
+  <div class="brand">ML Concepts Assessment</div>
+  <div class="status">
+    <span id="clockDisplay"><span class="dot"></span>Not started</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- SCREEN 1: student info -->
+  <div id="screen-info">
+    <h1>Before you begin</h1>
+    <div class="card">
+      <div class="field">
+        <label for="inName">Full name</label>
+        <input type="text" id="inName" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="inUsn">USN</label>
+        <input type="text" id="inUsn" autocomplete="off" placeholder="e.g. 01FE21BCS001">
+      </div>
+      <div class="field">
+        <label for="inEmail">Email</label>
+        <input type="email" id="inEmail" autocomplete="off">
+      </div>
+      <div id="infoError" class="error-text hidden">Please fill in all three fields.</div>
+      <button class="btn" id="btnToInstructions">Continue</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: instructions -->
+  <div id="screen-instructions" class="hidden">
+    <h1>Instructions</h1>
+    <div class="card">
+      <ul class="rule-list">
+        <li><b>30 questions total</b> — 20 multiple choice, 10 coding (run in Colab, enter the numeric result).</li>
+        <li>For the coding section, open the linked notebook in Colab, run the required cell, and type your answer <b>rounded to 2 decimal places</b> unless the question says otherwise.</li>
+        <li>The assessment runs in <b>fullscreen mode</b>. Leaving fullscreen or switching tabs is logged.</li>
+        <li>Exiting fullscreen <b>3 times</b> locks the assessment and submits your answers as they stand.</li>
+        <li>Copy, paste, and right-click are disabled on this page.</li>
+        <li>Only <b>one submission per USN</b> is accepted.</li>
+      </ul>
+      <div style="margin-top:26px; display:flex; gap:12px;">
+        <a id="colabLink" href="#" target="_blank" class="btn outline" style="text-decoration:none; display:inline-flex; align-items:center;">Open Colab notebook</a>
+        <button class="btn" id="btnStartExam">Start assessment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: exam -->
+  <div id="screen-exam" class="hidden">
+    <div class="section-eyebrow">Section A — Multiple choice</div>
+    <div id="mcqContainer"></div>
+
+    <div class="section-eyebrow">Section B — Coding (answers from Colab)</div>
+    <div id="codingContainer"></div>
+
+    <div class="submit-bar">
+      <span class="progress-text" id="progressText">0 / 30 answered</span>
+      <button class="btn" id="btnSubmit">Submit assessment</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: done -->
+  <div id="screen-done" class="hidden">
+    <div class="card done-card">
+      <div class="section-eyebrow" style="justify-content:center;"><span>Submitted</span></div>
+      <h1 id="doneTitle">Assessment received</h1>
+      <div class="score" id="doneScore">—</div>
+      <p id="doneMessage" style="color:var(--ink-soft);"></p>
+    </div>
+  </div>
+
+  <footer class="note">Your answers, timing, and any fullscreen/tab-switch events are recorded on submission.</footer>
+</div>
+
+<!-- Warning overlay -->
+<div class="overlay" id="warnOverlay">
+  <div class="box">
+    <h2 id="warnTitle">You left fullscreen</h2>
+    <p id="warnBody">This has been logged. Return to fullscreen to continue the assessment.</p>
+    <button class="btn" id="btnReenter">Return to fullscreen</button>
+  </div>
+</div>
+
+<!-- Locked overlay -->
+<div class="overlay" id="lockOverlay">
+  <div class="box">
+    <h2>Assessment locked</h2>
+    <p>You exited fullscreen 3 times. Your answers have been submitted as they stood.</p>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIG — edit these two lines before deploying
+   ========================================================= */
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const COLAB_NOTEBOOK_URL = "https://colab.research.google.com/github/YOUR_GITHUB_USERNAME/YOUR_REPO/blob/main/coding_questions.ipynb";
+
+/* =========================================================
+   QUESTION DATA (no answer key here — grading happens server-side)
+   ========================================================= */
+const MCQ = [
+{id:"q1",prompt:"In linear regression with a dummy feature x^0 = 1 added, what is the purpose of this feature?",options:{a:"To normalize the other features",b:"To allow the model to have a non-zero intercept",c:"To reduce the dimensionality of the data",d:"To remove multicollinearity"}},
+{id:"q2",prompt:"Setting the derivative of the squared loss to zero for linear regression gives which closed-form solution for w?",options:{a:"w = (X^T X)^-1 X^T y",b:"w = X^T y",c:"w = (X X^T)^-1 y",d:"w = X y^-1"}},
+{id:"q3",prompt:"In batch gradient descent, why might using a very small learning rate (e.g. 10^-10) require many iterations to converge?",options:{a:"Because small steps make each update move very little toward the minimum",b:"Because small learning rates cause overfitting",c:"Because small learning rates increase the feature dimensionality",d:"Because small learning rates always diverge"}},
+{id:"q4",prompt:"What's the main practical difference between batch gradient descent and stochastic (mini-batch) gradient descent?",options:{a:"SGD uses random subsets of data per update, making updates noisier but faster per step",b:"SGD always converges to a better minimum than batch GD",c:"Batch GD cannot be used for regression",d:"SGD requires no learning rate"}},
+{id:"q5",prompt:"In kernel regression, the weight vector is written as w = φ(x)α. What does the kernel trick let you avoid computing directly?",options:{a:"The label vector y",b:"The explicit high-dimensional feature mapping φ(x)",c:"The learning rate",d:"The bias term"}},
+{id:"q6",prompt:"A polynomial kernel of degree 3 implicitly corresponds to which kind of feature transformation?",options:{a:"Only linear features",b:"All polynomial combinations of features up to degree 3",c:"Logarithmic transformations of features",d:"Random projections of features"}},
+{id:"q7",prompt:"Why is centering the kernel matrix (computing KC) important before doing kernel PCA?",options:{a:"It removes noise from the labels",b:"It ensures the implicitly mapped features have zero mean, as required for PCA",c:"It reduces the kernel matrix to a diagonal matrix",d:"It converts the kernel matrix into a covariance matrix directly usable for regression"}},
+{id:"q8",prompt:"What is the key idea behind Support Vector Machines (SVMs) for classification?",options:{a:"Minimizing the sum of squared errors between predictions and labels",b:"Finding the hyperplane that maximizes the margin between classes",c:"Iteratively merging the closest clusters",d:"Averaging predictions from many weak learners"}},
+{id:"q9",prompt:"In Bagging (Bootstrap Aggregating), how are the individual models trained?",options:{a:"Each model is trained sequentially, correcting the errors of the previous one",b:"Each model is trained independently on a different bootstrap sample of the data",c:"All models are trained on the exact same dataset",d:"Each model is trained on a different subset of features only, never rows"}},
+{id:"q10",prompt:"Random Forest improves on plain Bagging of decision trees mainly by:",options:{a:"Using boosting instead of bagging",b:"Randomly selecting a subset of features at each split, decorrelating the trees",c:"Training only one very deep tree",d:"Removing the need for bootstrap sampling"}},
+{id:"q11",prompt:"AdaBoost adjusts the weights of training examples between iterations by:",options:{a:"Decreasing weights of misclassified examples",b:"Increasing weights of misclassified examples so the next weak learner focuses on them",c:"Removing misclassified examples from the dataset entirely",d:"Keeping all weights equal throughout training"}},
+{id:"q12",prompt:"What's the core difference between AdaBoost and Gradient Boosting?",options:{a:"Gradient Boosting fits new learners to the residual errors (negative gradient of the loss), while AdaBoost reweights misclassified examples",b:"AdaBoost can only be used for regression, Gradient Boosting only for classification",c:"Gradient Boosting trains all learners in parallel",d:"There is no meaningful difference"}},
+{id:"q13",prompt:"In K-Means clustering, what does the algorithm iteratively optimize?",options:{a:"The number of clusters K",b:"The within-cluster sum of squared distances to centroids",c:"The margin between clusters",d:"The correlation between features"}},
+{id:"q14",prompt:"How does Hierarchical Clustering differ fundamentally from K-Means?",options:{a:"It requires specifying K in advance, just like K-Means",b:"It builds a nested tree (dendrogram) of clusters without needing K upfront",c:"It only works on categorical data",d:"It uses gradient descent to find clusters"}},
+{id:"q15",prompt:"In a neural network, what role does the activation function play?",options:{a:"It initializes the weights randomly",b:"It introduces non-linearity, allowing the network to model complex functions",c:"It computes the loss function",d:"It splits the data into train/test sets"}},
+{id:"q16",prompt:"During neural network training, backpropagation is used to:",options:{a:"Randomly reinitialize weights each epoch",b:"Compute gradients of the loss w.r.t. each weight via the chain rule, for use in gradient-based updates",c:"Select the best activation function automatically",d:"Reduce the number of layers in the network"}},
+{id:"q17",prompt:"Why might squared-loss RMSE be a reasonable choice to evaluate a regression model's train vs test performance?",options:{a:"It penalizes larger errors more heavily and is in the same units as the target variable",b:"It is only defined for classification problems",c:"It ignores outliers completely",d:"It cannot be computed on test data"}},
+{id:"q18",prompt:"If a model has much lower training loss than test loss, this is typically a sign of:",options:{a:"Underfitting",b:"Overfitting",c:"Perfect generalization",d:"An error in the loss function"}},
+{id:"q19",prompt:"OpenCV is primarily used for which kind of task?",options:{a:"Symbolic mathematics",b:"Computer vision and image processing operations",c:"Natural language tokenization",d:"Distributed database management"}},
+{id:"q20",prompt:"In PyTorch, what is the primary purpose of a tensor's requires_grad=True setting?",options:{a:"It disables automatic differentiation for that tensor",b:"It tells PyTorch to track operations on that tensor for automatic gradient computation",c:"It converts the tensor to a NumPy array",d:"It forces the tensor to be stored on the GPU"}}
+];
+
+const CODING = [
+{id:"c1",title:"PCA — Explained Variance",prompt:"Load load_iris(), standardize with StandardScaler, fit PCA(n_components=4, random_state=42). Enter the % variance explained by PC1 (2 decimals)."},
+{id:"c2",title:"PCA — Reconstruction Error",prompt:"Using the same standardized Iris data, fit PCA(n_components=2, random_state=42), reconstruct via inverse_transform. Enter sqrt(mean((X - X_recon)^2)) (2 decimals)."},
+{id:"c3",title:"Kernel PCA on Wine",prompt:"Load load_wine(), standardize. Fit KernelPCA(n_components=2, kernel='rbf', gamma=0.01, random_state=42). Enter sum of squares of PC1 values (2 decimals)."},
+{id:"c4",title:"K-Means Inertia",prompt:"Using standardized Iris data, run KMeans(n_clusters=3, random_state=42, n_init=10). Enter the inertia_ (2 decimals)."},
+{id:"c5",title:"Hierarchical Clustering",prompt:"Using standardized Wine data, run AgglomerativeClustering(n_clusters=3, linkage='ward'). Enter the size of the largest cluster (whole number)."},
+{id:"c6",title:"Linear Regression",prompt:"Load load_diabetes(), split test_size=0.2, random_state=42. Fit LinearRegression. Enter the test-set RMSE (2 decimals)."},
+{id:"c7",title:"Kernel Ridge Regression",prompt:"Using the Q6 split, fit KernelRidge(kernel='poly', degree=3, alpha=1.0). Enter the sum of test-set predictions (2 decimals)."},
+{id:"c8",title:"SVM on Wine",prompt:"Standardize Wine data, split test_size=0.3, random_state=42, stratify=y. Fit SVC(kernel='linear', C=1, random_state=42). Enter test accuracy as % (2 decimals)."},
+{id:"c9",title:"Random Forest",prompt:"Load load_breast_cancer(), split test_size=0.25, random_state=42, stratify=y. Fit RandomForestClassifier(n_estimators=100, random_state=42). Enter test accuracy as % (2 decimals)."},
+{id:"c10",title:"AdaBoost",prompt:"Using the Q9 split, fit AdaBoostClassifier(n_estimators=50, random_state=42). Enter test accuracy as % (2 decimals)."}
+];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let student = {name:"", usn:"", email:""};
+let answers = {mcq:{}, coding:{}};
+let tabSwitches = 0;
+let fullscreenExits = 0;
+let startTime = null;
+let locked = false;
+let submitted = false;
+
+/* =========================================================
+   RENDER QUESTIONS
+   ========================================================= */
+function renderMCQ(){
+  const c = document.getElementById("mcqContainer");
+  c.innerHTML = MCQ.map((q,i)=>`
+    <div class="q" data-qid="${q.id}">
+      <div class="qnum">Question ${i+1} of 30</div>
+      <div class="prompt">${q.prompt}</div>
+      <div class="opts">
+        ${Object.entries(q.options).map(([k,v])=>`
+          <label class="opt" data-key="${k}">
+            <input type="radio" name="${q.id}" value="${k}">
+            <span>${v}</span>
+          </label>`).join("")}
+      </div>
+    </div>`).join("");
+
+  c.querySelectorAll(".q").forEach(qEl=>{
+    const qid = qEl.dataset.qid;
+    qEl.querySelectorAll(".opt").forEach(optEl=>{
+      optEl.addEventListener("click", ()=>{
+        qEl.querySelectorAll(".opt").forEach(o=>o.classList.remove("selected"));
+        optEl.classList.add("selected");
+        optEl.querySelector("input").checked = true;
+        answers.mcq[qid] = optEl.dataset.key;
+        updateProgress();
+      });
+    });
+  });
+}
+
+function renderCoding(){
+  const c = document.getElementById("codingContainer");
+  c.innerHTML = CODING.map((q,i)=>`
+    <div class="q" data-qid="${q.id}">
+      <div class="qnum">Coding question ${i+1} of 10 — ${q.title}</div>
+      <div class="prompt">${q.prompt}</div>
+      <div class="coding-answer">
+        <input type="number" step="any" inputmode="decimal" id="input-${q.id}">
+        <span class="hint">numeric answer</span>
+      </div>
+    </div>`).join("");
+
+  c.querySelectorAll("input").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      const qid = inp.id.replace("input-","");
+      answers.coding[qid] = inp.value;
+      updateProgress();
+    });
+    // block paste
+    inp.addEventListener("paste", e=>e.preventDefault());
+  });
+}
+
+function updateProgress(){
+  const done = Object.keys(answers.mcq).length + Object.keys(answers.coding).length;
+  document.getElementById("progressText").textContent = `${done} / 30 answered`;
+}
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+document.getElementById("btnToInstructions").addEventListener("click", ()=>{
+  const name = document.getElementById("inName").value.trim();
+  const usn = document.getElementById("inUsn").value.trim();
+  const email = document.getElementById("inEmail").value.trim();
+  if(!name || !usn || !email){
+    document.getElementById("infoError").classList.remove("hidden");
+    return;
+  }
+  student = {name, usn, email};
+  document.getElementById("infoError").classList.add("hidden");
+  document.getElementById("colabLink").href = COLAB_NOTEBOOK_URL;
+  show("screen-instructions");
+});
+
+document.getElementById("btnStartExam").addEventListener("click", ()=>{
+  renderMCQ();
+  renderCoding();
+  show("screen-exam");
+  startTime = new Date();
+  updateClock();
+  setInterval(updateClock, 1000);
+  requestFullscreen();
+});
+
+function show(id){
+  ["screen-info","screen-instructions","screen-exam","screen-done"].forEach(s=>{
+    document.getElementById(s).classList.toggle("hidden", s!==id);
+  });
+}
+
+function updateClock(){
+  const el = document.getElementById("clockDisplay");
+  if(!startTime){ el.innerHTML = `<span class="dot"></span>Not started`; return; }
+  const secs = Math.floor((new Date() - startTime)/1000);
+  const m = String(Math.floor(secs/60)).padStart(2,"0");
+  const s = String(secs%60).padStart(2,"0");
+  const dotClass = fullscreenExits>=2 ? "bad" : (fullscreenExits>=1 ? "warn" : "");
+  el.innerHTML = `<span class="dot ${dotClass}"></span>${m}:${s} elapsed · ${fullscreenExits}/3 fullscreen exits`;
+}
+
+/* =========================================================
+   PROCTORING: fullscreen + tab switch
+   ========================================================= */
+function requestFullscreen(){
+  const el = document.documentElement;
+  if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+}
+
+document.addEventListener("fullscreenchange", ()=>{
+  if(!document.fullscreenElement && startTime && !locked && !submitted){
+    fullscreenExits++;
+    updateClock();
+    if(fullscreenExits >= 3){
+      lockAndSubmit();
+    } else {
+      document.getElementById("warnTitle").textContent = "You left fullscreen";
+      document.getElementById("warnBody").textContent =
+        `This has been logged (${fullscreenExits}/3). Exiting a 3rd time will lock and submit the assessment.`;
+      document.getElementById("warnOverlay").classList.add("show");
+    }
+  }
+});
+
+document.getElementById("btnReenter").addEventListener("click", ()=>{
+  document.getElementById("warnOverlay").classList.remove("show");
+  requestFullscreen();
+});
+
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden && startTime && !locked && !submitted){
+    tabSwitches++;
+  }
+});
+
+// Block copy / paste / right-click / common shortcuts during the exam
+["copy","paste","cut","contextmenu"].forEach(evt=>{
+  document.addEventListener(evt, e=>{
+    if(document.getElementById("screen-exam") && !document.getElementById("screen-exam").classList.contains("hidden")){
+      e.preventDefault();
+    }
+  });
+});
+document.addEventListener("keydown", e=>{
+  const inExam = document.getElementById("screen-exam") && !document.getElementById("screen-exam").classList.contains("hidden");
+  if(inExam && (e.ctrlKey||e.metaKey) && ["c","v","x","u"].includes(e.key.toLowerCase())){
+    e.preventDefault();
+  }
+});
+
+function lockAndSubmit(){
+  locked = true;
+  document.getElementById("lockOverlay").classList.add("show");
+  submitAssessment();
+}
+
+/* =========================================================
+   SUBMIT
+   ========================================================= */
+document.getElementById("btnSubmit").addEventListener("click", submitAssessment);
+
+async function submitAssessment(){
+  if(submitted) return;
+  submitted = true;
+  const endTime = new Date();
+  const durationSeconds = startTime ? Math.floor((endTime - startTime)/1000) : null;
+
+  const payload = {
+    name: student.name,
+    usn: student.usn,
+    email: student.email,
+    startTime: startTime ? startTime.toISOString() : "",
+    endTime: endTime.toISOString(),
+    durationSeconds: durationSeconds,
+    tabSwitches: tabSwitches,
+    fullscreenExits: fullscreenExits,
+    mcq: answers.mcq,
+    coding: answers.coding
+  };
+
+  document.getElementById("btnSubmit").disabled = true;
+  document.getElementById("btnSubmit").textContent = "Submitting…";
+
+  try{
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    document.getElementById("lockOverlay").classList.remove("show");
+
+    if(data.ok){
+      document.getElementById("doneTitle").textContent = "Assessment received";
+      document.getElementById("doneScore").textContent = `${data.totalScore} / ${data.maxScore}`;
+      document.getElementById("doneMessage").textContent =
+        `MCQ: ${data.mcqCorrect}/${data.mcqTotal} · Coding: ${data.codingCorrect}/${data.codingTotal}`;
+    } else {
+      document.getElementById("doneTitle").textContent = "Submission not accepted";
+      document.getElementById("doneScore").textContent = "—";
+      document.getElementById("doneMessage").textContent = data.error || "Please contact the instructor.";
+    }
+    show("screen-done");
+  } catch(err){
+    document.getElementById("doneTitle").textContent = "Network error";
+    document.getElementById("doneScore").textContent = "—";
+    document.getElementById("doneMessage").textContent =
+      "Your answers could not be sent. Please check your connection and contact the instructor — do not close this tab.";
+    show("screen-done");
+    submitted = false;
+    document.getElementById("btnSubmit").disabled = false;
+    document.getElementById("btnSubmit").textContent = "Retry submit";
+  }
+}
+
+window.addEventListener("beforeunload", (e)=>{
+  const inExam = document.getElementById("screen-exam") && !document.getElementById("screen-exam").classList.contains("hidden");
+  if(inExam && !submitted){
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+</script>
+</body>
+</html>
